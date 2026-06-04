@@ -181,6 +181,27 @@ function setStatus(type, msg) {
 }
 
 // ── Cargar datos ──────────────────────────────────────────────────────────────
+// Normaliza un registro del JSON (soporta nombres largos del flujo y nombres cortos)
+function normalizar(d) {
+  // Si ya tiene el campo "ref" es formato corto — devolver tal cual
+  if (d.ref !== undefined) return d;
+  // Formato largo de Power Automate → formato corto del dashboard
+  return {
+    ref:      d['Referencia']      || d['ref']      || '',
+    desc:     d['Descripcion']     || d['desc']     || '',
+    marca:    d['Marca']           || d['marca']    || '',
+    bog:      parseFloat(d['Bogota_001']    || d['bog']      || 0),
+    sab:      parseFloat(d['Sabaneta_002']  || d['sab']      || 0),
+    pruebas:  parseFloat(d['EnPruebas_003'] || d['pruebas']  || 0),
+    total:    parseFloat(d['Total_SIESA']   || d['total']    || 0),
+    comp:     parseFloat(d['Comprometido']  || d['comp']     || 0),
+    disp:     parseFloat(d['Disponible_Real']|| d['disp']    || 0),
+    porsubir: parseFloat(d['Por_Subir_SIESA']|| d['porsubir']|| 0),
+    precio:   parseFloat(d['Precio_Venta']  || d['precio']   || 0),
+    barcode:  d['Codigo_Barras']   || d['barcode']  || '',
+  };
+}
+
 async function loadData() {
   setStatus('load', 'Cargando inventario...');
   try {
@@ -188,8 +209,10 @@ async function loadData() {
     const r = await fetch(JSON_URL + '?v=' + Date.now());
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const json = await r.json();
-    DATA = Array.isArray(json) ? json : (json.items || json.data || []);
-    if (!DATA.length) throw new Error('JSON vacío');
+    const raw = Array.isArray(json) ? json : (json.items || json.data || []);
+    if (!raw.length) throw new Error('JSON vacío');
+    // Normalizar y filtrar filas sin referencia (ej: fila de totales)
+    DATA = raw.map(normalizar).filter(d => d.ref && d.ref.trim() !== '');
     initUI();
   } catch(e) {
     setStatus('err', 'Error al cargar datos: ' + e.message);
