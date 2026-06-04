@@ -181,24 +181,25 @@ function setStatus(type, msg) {
 }
 
 // ── Cargar datos ──────────────────────────────────────────────────────────────
-// Normaliza un registro del JSON (soporta nombres largos del flujo y nombres cortos)
+// Normaliza un registro del JSON (soporta nombres del flujo Power Automate con espacios/tildes)
 function normalizar(d) {
   // Si ya tiene el campo "ref" es formato corto — devolver tal cual
   if (d.ref !== undefined) return d;
-  // Formato largo de Power Automate → formato corto del dashboard
+  // Formato del JSON generado por Power Automate desde Excel Online
+  const prs = s => { const n = parseFloat(String(s||'').replace(',','.')); return isNaN(n)?0:n; };
   return {
-    ref:      d['Referencia']      || d['ref']      || '',
-    desc:     d['Descripcion']     || d['desc']     || '',
-    marca:    d['Marca']           || d['marca']    || '',
-    bog:      parseFloat(d['Bogota_001']    || d['bog']      || 0),
-    sab:      parseFloat(d['Sabaneta_002']  || d['sab']      || 0),
-    pruebas:  parseFloat(d['EnPruebas_003'] || d['pruebas']  || 0),
-    total:    parseFloat(d['Total_SIESA']   || d['total']    || 0),
-    comp:     parseFloat(d['Comprometido']  || d['comp']     || 0),
-    disp:     parseFloat(d['Disponible_Real']|| d['disp']    || 0),
-    porsubir: parseFloat(d['Por_Subir_SIESA']|| d['porsubir']|| 0),
-    precio:   parseFloat(d['Precio_Venta']  || d['precio']   || 0),
-    barcode:  d['Codigo_Barras']   || d['barcode']  || '',
+    ref:      d['Referencia']                          || '',
+    desc:     d['Descripción'] || d['Descripcion']    || '',
+    marca:    d['Marca']                               || '',
+    bog:      prs(d['Bogotá (001)']   || d['Bogota (001)']),
+    sab:      prs(d['Sabaneta (002)']),
+    pruebas:  prs(d['En Pruebas (003)']),
+    total:    prs(d['Total SIESA']),
+    comp:     prs(d['Comprometido']),
+    disp:     prs(d['Disponible Real']),
+    porsubir: prs(d['Por Subir\nImportación\nSIESA'] || d['Por Subir\nImportacion\nSIESA']),
+    precio:   prs(d['Precio\nVenta'] || d['Precio Venta']),
+    barcode:  '',
   };
 }
 
