@@ -88,39 +88,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 .gbtn:disabled{background:#CBD5E1;cursor:not-allowed}
 .clrbtn{width:100%;padding:6px;background:#fff;color:#64748B;border:1px solid #E2E8F0;border-radius:6px;font-size:.77rem;cursor:pointer}
 
-/* ── PEDIDOS TAB ── */
-.ped-wrap{padding:16px 20px;overflow-y:auto;height:calc(100vh - 110px)}
-.ped-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
-.ped-toolbar h2{font-size:.95rem;font-weight:700;flex:1}
-.tbtn{padding:6px 13px;border:1.5px solid #CBD5E1;border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;font-weight:500;transition:all .15s}
-.tbtn:hover{border-color:#3B82F6;color:#1D4ED8}
-.tbtn.red{border-color:#FCA5A5;color:#B91C1C;background:#FFF5F5}
-.tbtn.blue{border-color:#93C5FD;color:#1D4ED8;background:#EFF6FF}
-.sup-block{background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;margin-bottom:12px;overflow:hidden}
-.sup-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F1F5F9;background:#F8FAFC}
-.sup-hdr .cnt{font-size:.76rem;color:#64748B;margin-left:auto;margin-right:8px}
-.exp-btn{padding:4px 11px;background:#1E2A3A;color:#fff;border:none;border-radius:5px;font-size:.72rem;cursor:pointer;font-weight:600}
-.ped-item{display:grid;grid-template-columns:1fr 60px 100px;gap:8px;align-items:center;padding:8px 16px;border-bottom:1px solid #F1F5F9;font-size:.78rem}
-.ped-item:last-child{border-bottom:none}
-.ped-item.done{opacity:.4}
-.ped-item .iref{font-weight:600;color:#1E293B}
-.ped-item .imeta{font-size:.71rem;color:#3B82F6;margin-top:1px}
-.ped-item .iprod{font-size:.71rem;color:#94A3B8}
-.ped-item .iqty{font-weight:700;color:#1D4ED8;font-size:.8rem;text-align:right}
-.done-btn{padding:4px 8px;border:1.5px solid #CBD5E1;border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;white-space:nowrap;transition:all .15s}
-.done-btn.undo{background:#DCFCE7;border-color:#86EFAC;color:#166534}
-.no-ped{color:#94A3B8;text-align:center;padding:48px 24px;font-size:.92rem}
-
-/* ── MODAL ── */
-.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
-.ov.open{display:flex}
-.modal{background:#fff;border-radius:12px;width:min(540px,94vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-.modal-hdr{padding:14px 20px;font-size:.95rem;font-weight:700;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:8px}
-.modal textarea{flex:1;padding:14px 18px;border:none;resize:none;font-family:monospace;font-size:.8rem;color:#334155;min-height:220px;outline:none;background:#F8FAFC}
-.mbtns{display:flex;gap:8px;padding:12px 18px;border-top:1px solid #E2E8F0}
-.cbtn{flex:1;padding:9px;background:#3B82F6;color:#fff;border:none;border-radius:7px;font-weight:600;cursor:pointer;transition:background .15s}
-.cbtn:hover{background:#2563EB}
-.xbtn{flex:1;padding:9px;background:#F1F5F9;border:1.5px solid #CBD5E1;border-radius:7px;cursor:pointer;font-weight:500}
 
 /* ── SENDING STATE ── */
 .sending{opacity:.6;pointer-events:none}
@@ -136,10 +103,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
   </div>
 </div>
 
-<div class="tabs">
-  <div class="tab on" data-tab="b" onclick="showTab('b')">&#128269; Buscador</div>
-  <div class="tab" data-tab="p" onclick="showTab('p')">&#128230; Pedidos por proveedor <span class="badge" id="pedBadge" style="display:none">0</span></div>
-</div>
 
 <!-- LOADING -->
 <div id="loading">
@@ -180,37 +143,13 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 </div>
 
 <!-- PEDIDOS -->
-<div id="tab-p" style="display:none">
-  <div class="ped-wrap">
-    <div class="ped-toolbar">
-      <h2>&#128230; Pedidos pendientes por proveedor</h2>
-      <button class="tbtn blue" onclick="exportAll()">&#128196; Exportar todo</button>
-      <button class="tbtn red" onclick="clearDone()">&#128465; Limpiar completados</button>
-    </div>
-    <div id="ped-list"></div>
-  </div>
-</div>
-
-<!-- MODAL -->
-<div class="ov" id="ov">
-  <div class="modal">
-    <div class="modal-hdr">&#128203; <span id="modal-title">Solicitud enviada</span></div>
-    <textarea id="tx" readonly></textarea>
-    <div class="mbtns">
-      <button class="cbtn" onclick="cop()">Copiar</button>
-      <button class="xbtn" onclick="document.getElementById('ov').classList.remove('open')">Cerrar</button>
-    </div>
-  </div>
-</div>
 
 <script>
 // ── CONFIG ──
 var PA_WEBHOOK = 'https://default96a513cceb3c4b4da2dd91a440dcaa.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/20af5b4ea7be4d598e75a45d609a5e90/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=kvkYscatHHMyUshRK8FwVcOHif99lW1TK16km0v7tHU';
-var LS_KEY = 'mcut_pedidos_v2';
 
 var P = [];
 var MARCAS = ['TODOS','KYOCERA','ANNWAY','MCUT','CARMEX','OSG','DASQUA','HAIMER','CONDAT','DOWIN LASER','PRECISE','MRCM','NSK','STANNY','EARTH CHAIN','MADAULA'];
-var BC = {KYOCERA:'bKYOCERA',ANNWAY:'bANNWAY',MCUT:'bMCUT',CARMEX:'bCARMEX',OSG:'bOSG',DASQUA:'bDASQUA',HAIMER:'bHAIMER',CONDAT:'bCONDAT'};
 var cart = {}, af = 'TODOS', st = '';
 
 // ── LOAD DATA ──
@@ -222,21 +161,12 @@ fetch('./catalogo_importaciones.json')
     document.getElementById('tab-b').style.display = 'block';
     buildChips();
     render();
-    updateBadge();
   })
   .catch(function(e){
     document.getElementById('loading').innerHTML =
       '<div style="color:#EF4444;text-align:center;padding:40px">Error cargando el catálogo.<br><small>Verifica que catalogo_importaciones.json esté en la misma carpeta.</small></div>';
   });
 
-// ── TABS ──
-window.showTab = function(t){
-  document.getElementById('tab-b').style.display = t==='b'?'block':'none';
-  document.getElementById('tab-p').style.display = t==='p'?'block':'none';
-  var all = document.querySelectorAll('.tab');
-  for(var i=0;i<all.length;i++) all[i].classList[all[i].getAttribute('data-tab')===t?'add':'remove']('on');
-  if(t==='p') renderPed();
-};
 
 // ── CHIPS ──
 function buildChips(){
@@ -390,16 +320,6 @@ window.gen = function(){
     items.push({k:k,desc:it.desc,producto:it.producto,marca:it.marca,arancel:it.arancel,qty:it.qty,u:it.u,done:false});
   });
 
-  var fecha = new Date().toLocaleDateString('es-CO');
-  var solId = Date.now();
-  var payload = {id:solId,fecha:fecha,comercial:com,cliente:cli,oc:oc,items:items};
-
-  // Save locally
-  var data = loadPed();
-  data.push(payload);
-  savePed(data);
-  updateBadge();
-
   // Send to Power Automate (one row per item)
   var gbtn = document.getElementById('gb');
   gbtn.textContent = 'Enviando...';
@@ -428,26 +348,6 @@ window.gen = function(){
     gbtn.classList.remove('sending');
   });
 
-  // Build message text
-  var t = '📦 *SOLICITUD DE IMPORTACIÓN — MCUT SAS*\n';
-  t += 'Fecha: ' + fecha + '\n';
-  t += 'Comercial: ' + com + '\n';
-  t += 'Cliente: ' + cli + '\n';
-  if(oc) t += 'OC #: ' + oc + '\n';
-  t += '\n*Referencias:*\n';
-  items.forEach(function(it,i){
-    t += (i+1) + '. ' + it.desc;
-    if(it.producto && it.producto!==it.desc) t += ' (' + it.producto + ')';
-    t += '\n   Proveedor: ' + it.marca;
-    if(it.arancel) t += ' | Arancel: ' + it.arancel;
-    t += '\n   Cantidad: ' + it.qty + ' ' + it.u + '\n';
-  });
-  t += '\n_Solicitud registrada en el sistema._';
-
-  document.getElementById('modal-title').textContent = '✅ Solicitud enviada';
-  document.getElementById('tx').value = t;
-  document.getElementById('ov').classList.add('open');
-
   // Clear form
   document.getElementById('f-com').value = '';
   document.getElementById('f-cli').value = '';
@@ -455,153 +355,6 @@ window.gen = function(){
   cart = {}; rCart(); render();
 };
 
-// ── PEDIDOS (localStorage) ──
-function loadPed(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ return []; } }
-function savePed(d){ localStorage.setItem(LS_KEY, JSON.stringify(d)); }
-
-function updateBadge(){
-  var data = loadPed();
-  var n = 0;
-  data.forEach(function(sol){ sol.items.forEach(function(it){ if(!it.done) n++; }); });
-  var b = document.getElementById('pedBadge');
-  b.style.display = n > 0 ? 'inline' : 'none';
-  b.textContent = n;
-}
-
-function renderPed(){
-  var data = loadPed();
-  var el = document.getElementById('ped-list');
-  var byMarca = {};
-  data.forEach(function(sol){
-    sol.items.forEach(function(it){
-      if(!byMarca[it.marca]) byMarca[it.marca] = [];
-      var ex = null;
-      byMarca[it.marca].forEach(function(x){ if(x.k===it.k && !it.done && !x.done) ex=x; });
-      var meta = (sol.comercial||'') + (sol.cliente?' → '+sol.cliente:'') + (sol.oc?' OC:'+sol.oc:'');
-      if(ex && !it.done){
-        ex.qty += it.qty;
-        if(meta && ex.metas.indexOf(meta)<0) ex.metas.push(meta);
-      } else {
-        byMarca[it.marca].push({k:it.k,desc:it.desc,producto:it.producto,arancel:it.arancel,
-          qty:it.qty,u:it.u,done:it.done,solId:sol.id,metas:meta?[meta]:[]});
-      }
-    });
-  });
-  var marcas = Object.keys(byMarca);
-  if(!marcas.length){
-    el.innerHTML = '<div class="no-ped">No hay pedidos acumulados aún.<br><small>Los pedidos aparecen aquí cuando los comerciales envían solicitudes.</small></div>';
-    return;
-  }
-  var h = '';
-  marcas.forEach(function(m){
-    var items = byMarca[m];
-    var pend = items.filter(function(x){return!x.done;}).length;
-    var badge = BC[m]||'bDEF';
-    h += '<div class="sup-block">'
-      + '<div class="sup-hdr"><span class="mbadge '+badge+'">'+esc(m)+'</span>'
-      + '<span class="cnt">'+pend+' pendiente'+(pend!==1?'s':'')+' / '+items.length+' total</span>'
-      + '<button class="exp-btn" onclick="exportMarca(\''+esc(m)+'\')">&#128196; Exportar</button></div>';
-    items.forEach(function(it){
-      var metaStr = it.metas&&it.metas.length ? it.metas.join(' | ') : '';
-      h += '<div class="ped-item'+(it.done?' done':'')+'" data-sol="'+it.solId+'" data-k="'+encodeURIComponent(it.k)+'">'
-        + '<div><div class="iref">'+esc(it.k)+(it.k!==it.desc?' — '+esc(it.desc):'')+'</div>'
-        + (metaStr?'<div class="imeta">'+esc(metaStr)+'</div>':'')
-        + '<div class="iprod">'+esc(it.producto)+(it.arancel?' | '+esc(it.arancel):'')+'</div></div>'
-        + '<div class="iqty">'+it.qty+' '+it.u+'</div>'
-        + '<button class="done-btn'+(it.done?' undo':'')+'" data-sol="'+it.solId+'" data-k="'+encodeURIComponent(it.k)+'">'
-        + (it.done?'&#8635; Reabrir':'&#10003; Listo')+'</button>'
-        + '</div>';
-    });
-    h += '</div>';
-  });
-  el.innerHTML = h;
-}
-
-document.getElementById('ped-list').addEventListener('click', function(e){
-  var btn = e.target.closest ? e.target.closest('.done-btn') : null;
-  if(!btn) return;
-  var solId = parseInt(btn.getAttribute('data-sol'));
-  var k = decodeURIComponent(btn.getAttribute('data-k'));
-  var data = loadPed();
-  data.forEach(function(sol){
-    if(sol.id===solId) sol.items.forEach(function(it){if(it.k===k) it.done=!it.done;});
-  });
-  savePed(data); updateBadge(); renderPed();
-});
-
-window.exportMarca = function(marca){
-  var data = loadPed();
-  var merged = {};
-  data.forEach(function(sol){
-    sol.items.forEach(function(it){
-      if(it.marca===marca && !it.done){
-        if(merged[it.k]) merged[it.k].qty+=it.qty;
-        else{ var c=JSON.parse(JSON.stringify(it)); c.clientes=sol.cliente?[sol.cliente]:[];merged[it.k]=c; }
-      }
-    });
-  });
-  var keys = Object.keys(merged);
-  if(!keys.length){ alert('No hay items pendientes para '+marca); return; }
-  var t = '📋 ORDEN DE COMPRA — '+marca+'\nFecha: '+new Date().toLocaleDateString('es-CO')+'\nMCUT SAS\n\n';
-  keys.forEach(function(k,i){
-    var it=merged[k];
-    t += (i+1)+'. '+it.desc;
-    if(it.producto&&it.producto!==it.desc) t += ' ('+it.producto+')';
-    if(it.arancel) t += '\n   Arancel: '+it.arancel;
-    t += '\n   Cantidad: '+it.qty+' '+it.u;
-    if(it.clientes&&it.clientes.length) t += '\n   Clientes: '+it.clientes.join(', ');
-    t += '\n';
-  });
-  document.getElementById('modal-title').textContent = 'Orden — '+marca;
-  document.getElementById('tx').value = t;
-  document.getElementById('ov').classList.add('open');
-};
-
-window.exportAll = function(){
-  var data = loadPed();
-  var byM = {};
-  data.forEach(function(sol){
-    sol.items.forEach(function(it){
-      if(it.done) return;
-      if(!byM[it.marca]) byM[it.marca] = {};
-      if(byM[it.marca][it.k]) byM[it.marca][it.k].qty+=it.qty;
-      else byM[it.marca][it.k] = JSON.parse(JSON.stringify(it));
-    });
-  });
-  var marcas = Object.keys(byM);
-  if(!marcas.length){ alert('No hay pedidos pendientes.'); return; }
-  var t = '📦 RESUMEN PEDIDOS PENDIENTES — MCUT SAS\nFecha: '+new Date().toLocaleDateString('es-CO')+'\n';
-  marcas.forEach(function(m){
-    t += '\n════ '+m+' ════\n';
-    var items = Object.values(byM[m]);
-    items.forEach(function(it,i){
-      t += (i+1)+'. '+it.desc+'\n   Cantidad: '+it.qty+' '+it.u+'\n';
-    });
-  });
-  document.getElementById('modal-title').textContent = 'Resumen completo';
-  document.getElementById('tx').value = t;
-  document.getElementById('ov').classList.add('open');
-};
-
-window.clearDone = function(){
-  var data = loadPed();
-  data = data.map(function(sol){
-    sol.items = sol.items.filter(function(it){return!it.done;});
-    return sol;
-  }).filter(function(sol){return sol.items.length>0;});
-  savePed(data); updateBadge(); renderPed();
-};
-
-window.cop = function(){
-  var tx = document.getElementById('tx');
-  tx.select();
-  try{
-    navigator.clipboard.writeText(tx.value).then(function(){
-      var b=document.querySelector('.cbtn'); b.textContent='&#10003; Copiado!';
-      setTimeout(function(){b.textContent='Copiar';},1800);
-    });
-  }catch(e){ try{document.execCommand('copy');}catch(e2){} }
-};
 </script>
 </body>
 </html>
