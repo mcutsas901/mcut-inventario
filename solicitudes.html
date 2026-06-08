@@ -208,37 +208,46 @@ var PA_WEBHOOK = 'https://default96a513cceb3c4b4da2dd91a440dcaa.04.environment.a
 var LS_KEY = 'mcut_pedidos_v2';
 
 // ── MSAL AUTH ──
-var msalInstance = new msal.PublicClientApplication({
-  auth: {
-    clientId: '07b9ee30-e5da-456a-b6f7-e6f8e4cb64bd',
-    authority: 'https://login.microsoftonline.com/96a513cc-eb3c-4b4d-a2dd-91a440dcaa04',
-    redirectUri: 'https://mcutsas901.github.io/mcut-inventario/solicitudes.html'
-  },
-  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
-});
+var msalInstance = null;
 var PA_SCOPE = ['https://service.flow.microsoft.com/.default'];
 
-msalInstance.handleRedirectPromise().then(function(resp){
-  if(resp) msalInstance.setActiveAccount(resp.account);
+try {
+  msalInstance = new msal.PublicClientApplication({
+    auth: {
+      clientId: '07b9ee30-e5da-456a-b6f7-e6f8e4cb64bd',
+      authority: 'https://login.microsoftonline.com/96a513cc-eb3c-4b4d-a2dd-91a440dcaa04',
+      redirectUri: 'https://mcutsas901.github.io/mcut-inventario/solicitudes.html'
+    },
+    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
+  });
+  msalInstance.handleRedirectPromise().then(function(resp){
+    if(resp) msalInstance.setActiveAccount(resp.account);
+    updateAuthUI();
+  }).catch(function(){ updateAuthUI(); });
+} catch(e) {
+  console.warn('MSAL no disponible:', e);
   updateAuthUI();
-}).catch(function(){ updateAuthUI(); });
+}
 
-function getAccount(){ var a=msalInstance.getAllAccounts(); return a.length>0?a[0]:null; }
+function getAccount(){ if(!msalInstance) return null; var a=msalInstance.getAllAccounts(); return a.length>0?a[0]:null; }
 
 function updateAuthUI(){
   var acc = getAccount();
   var el = document.getElementById('auth-status');
   if(!el) return;
-  if(acc){
+  if(!msalInstance){
+    el.innerHTML = '<span style="font-size:.72rem;color:#F87171">Auth no disponible</span>';
+  } else if(acc){
     el.innerHTML = '<span style="font-size:.75rem;color:#6EE7B7">● '+acc.username+'</span>';
   } else {
     el.innerHTML = '<button onclick="loginMSAL()" style="background:#3B82F6;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:.82rem;cursor:pointer;font-weight:700">Iniciar sesi&oacute;n</button>';
   }
 }
 
-function loginMSAL(){ msalInstance.loginRedirect({scopes:PA_SCOPE}); }
+function loginMSAL(){ if(msalInstance) msalInstance.loginRedirect({scopes:PA_SCOPE}); }
 
 function getToken(){
+  if(!msalInstance) return Promise.resolve(null);
   var acc = getAccount();
   if(!acc){ loginMSAL(); return Promise.resolve(null); }
   return msalInstance.acquireTokenSilent({scopes:PA_SCOPE,account:acc})
