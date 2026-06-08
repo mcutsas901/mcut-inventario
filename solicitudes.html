@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MCUT SAS — Solicitudes de Importación</title>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:#1E2A3A;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.logo{font-size:1.4rem;font-weight:900;color:#3B82F6;letter-spacing:-1px}
+.header-text h1{font-size:1rem;font-weight:700;letter-spacing:.3px}
+.header-text p{font-size:.76rem;color:#94A3B8;margin-top:1px}
+
+/* ── TABS ── */
+.tabs{background:#fff;border-bottom:2px solid #E2E8F0;display:flex;padding:0 20px;gap:4px}
+.tab{padding:11px 18px;font-size:.85rem;font-weight:600;color:#64748B;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap}
+.tab:hover{color:#1E2A3A}
+.tab.on{color:#1E2A3A;border-bottom-color:#1E2A3A}
+.badge{background:#EF4444;color:#fff;font-size:.62rem;padding:1px 5px;border-radius:10px;margin-left:5px;font-weight:700;vertical-align:middle}
+
+/* ── LOADING ── */
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:14px;color:#64748B}
+.spinner{width:36px;height:36px;border:4px solid #E2E8F0;border-top-color:#3B82F6;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── SEARCH BAR ── */
+.sbar{background:#fff;padding:12px 20px;border-bottom:1px solid #E2E8F0;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.sbar input{width:100%;padding:9px 14px;border:1.5px solid #CBD5E1;border-radius:8px;font-size:.93rem;outline:none;transition:border .2s}
+.sbar input:focus{border-color:#3B82F6}
+#chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.chip{background:#F1F5F9;border:1.5px solid #CBD5E1;border-radius:20px;padding:4px 12px;font-size:.75rem;cursor:pointer;font-weight:500;white-space:nowrap;transition:all .15s}
+.chip:hover{border-color:#3B82F6;color:#1D4ED8}
+.chip.on{background:#1E2A3A;color:#fff;border-color:#1E2A3A}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:1fr 310px;height:calc(100vh - 158px)}
+@media(max-width:700px){.layout{grid-template-columns:1fr}.panel{display:none}}
+
+/* ── GRID ── */
+.gwrap{overflow-y:auto;padding:12px 16px}
+.rc{font-size:.8rem;color:#64748B;margin-bottom:8px;font-weight:500}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:9px}
+.card{background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;padding:12px;cursor:pointer;position:relative;transition:border .15s,box-shadow .15s}
+.card:hover{border-color:#3B82F6;box-shadow:0 2px 8px rgba(59,130,246,.1)}
+.card.on{border-color:#10B981;background:#F0FDF4}
+.mbadge{display:inline-block;font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:4px;margin-bottom:6px}
+.bKYOCERA{background:#DBEAFE;color:#1D4ED8}.bANNWAY{background:#D1FAE5;color:#065F46}
+.bMCUT{background:#EDE9FE;color:#7C3AED}.bCARMEX{background:#FEE2E2;color:#B91C1C}
+.bOSG{background:#CCFBF1;color:#0F766E}.bDASQUA{background:#FEF3C7;color:#92400E}
+.bHAIMER{background:#FCE7F3;color:#9D174D}.bCONDAT{background:#DBEAFE;color:#1E3A8A}
+.bDEF{background:#F1F5F9;color:#475569}
+.addbtn{position:absolute;top:9px;right:9px;width:24px;height:24px;border-radius:50%;border:none;font-size:.9rem;cursor:pointer;background:#E2E8F0;color:#475569;font-weight:700;text-align:center;line-height:24px;transition:all .15s}
+.card.on .addbtn{background:#10B981;color:#fff}
+.cref{font-size:.78rem;font-weight:600;margin-bottom:2px;padding-right:28px}
+.cprod{font-size:.73rem;color:#64748B;margin-bottom:2px}
+.car{font-size:.68rem;color:#0F766E;background:#CCFBF1;display:inline-block;padding:1px 5px;border-radius:4px}
+.msg{color:#94A3B8;padding:24px;text-align:center;font-size:.88rem;grid-column:1/-1}
+
+/* ── CART PANEL ── */
+.panel{background:#fff;border-left:1px solid #E2E8F0;display:flex;flex-direction:column;overflow:hidden}
+.panel-hdr{padding:12px 14px;font-size:.9rem;font-weight:700;border-bottom:1px solid #E2E8F0;background:#F8FAFC}
+.info-fields{padding:10px 12px;border-bottom:1px solid #E2E8F0;background:#FAFCFF}
+.info-fields label{display:block;font-size:.71rem;font-weight:600;color:#475569;margin-bottom:2px;margin-top:5px}
+.info-fields label:first-child{margin-top:0}
+.info-fields input{width:100%;padding:5px 8px;border:1.5px solid #CBD5E1;border-radius:6px;font-size:.78rem;outline:none;transition:border .15s}
+.info-fields input:focus{border-color:#3B82F6}
+.info-fields input.req{border-color:#FCA5A5;background:#FFF5F5}
+.citems{flex:1;overflow-y:auto;padding:7px}
+.cempty{color:#94A3B8;text-align:center;padding:22px 12px;font-size:.82rem}
+.ci{border:1px solid #E2E8F0;border-radius:7px;padding:8px;margin-bottom:6px;font-size:.76rem}
+.ci .cr{font-weight:600;margin-bottom:4px;padding-right:18px;position:relative}
+.rmv{position:absolute;right:0;top:0;background:none;border:none;color:#94A3B8;cursor:pointer;font-size:1rem;line-height:1}
+.rmv:hover{color:#EF4444}
+.crow{display:flex;gap:5px;align-items:center;margin-top:4px}
+.ci select,.ci input[type=number]{border:1px solid #CBD5E1;border-radius:5px;padding:3px 5px;font-size:.74rem}
+.ci input[type=number]{width:50px}
+.pfooter{padding:10px 12px;border-top:1px solid #E2E8F0;display:flex;flex-direction:column;gap:6px}
+.gbtn{width:100%;padding:9px;background:#1E2A3A;color:#fff;border:none;border-radius:7px;font-size:.86rem;font-weight:600;cursor:pointer;transition:background .2s}
+.gbtn:hover:not(:disabled){background:#2D3E54}
+.gbtn:disabled{background:#CBD5E1;cursor:not-allowed}
+.clrbtn{width:100%;padding:6px;background:#fff;color:#64748B;border:1px solid #E2E8F0;border-radius:6px;font-size:.77rem;cursor:pointer}
+
+/* ── PEDIDOS TAB ── */
+.ped-wrap{padding:16px 20px;overflow-y:auto;height:calc(100vh - 110px)}
+.ped-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.ped-toolbar h2{font-size:.95rem;font-weight:700;flex:1}
+.tbtn{padding:6px 13px;border:1.5px solid #CBD5E1;border-radius:7px;font-size:.78rem;cursor:pointer;background:#fff;font-weight:500;transition:all .15s}
+.tbtn:hover{border-color:#3B82F6;color:#1D4ED8}
+.tbtn.red{border-color:#FCA5A5;color:#B91C1C;background:#FFF5F5}
+.tbtn.blue{border-color:#93C5FD;color:#1D4ED8;background:#EFF6FF}
+.sup-block{background:#fff;border:1.5px solid #E2E8F0;border-radius:10px;margin-bottom:12px;overflow:hidden}
+.sup-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #F1F5F9;background:#F8FAFC}
+.sup-hdr .cnt{font-size:.76rem;color:#64748B;margin-left:auto;margin-right:8px}
+.exp-btn{padding:4px 11px;background:#1E2A3A;color:#fff;border:none;border-radius:5px;font-size:.72rem;cursor:pointer;font-weight:600}
+.ped-item{display:grid;grid-template-columns:1fr 60px 100px;gap:8px;align-items:center;padding:8px 16px;border-bottom:1px solid #F1F5F9;font-size:.78rem}
+.ped-item:last-child{border-bottom:none}
+.ped-item.done{opacity:.4}
+.ped-item .iref{font-weight:600;color:#1E293B}
+.ped-item .imeta{font-size:.71rem;color:#3B82F6;margin-top:1px}
+.ped-item .iprod{font-size:.71rem;color:#94A3B8}
+.ped-item .iqty{font-weight:700;color:#1D4ED8;font-size:.8rem;text-align:right}
+.done-btn{padding:4px 8px;border:1.5px solid #CBD5E1;border-radius:5px;font-size:.7rem;cursor:pointer;background:#fff;white-space:nowrap;transition:all .15s}
+.done-btn.undo{background:#DCFCE7;border-color:#86EFAC;color:#166534}
+.no-ped{color:#94A3B8;text-align:center;padding:48px 24px;font-size:.92rem}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center}
+.ov.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:min(540px,94vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-hdr{padding:14px 20px;font-size:.95rem;font-weight:700;border-bottom:1px solid #E2E8F0;display:flex;align-items:center;gap:8px}
+.modal textarea{flex:1;padding:14px 18px;border:none;resize:none;font-family:monospace;font-size:.8rem;color:#334155;min-height:220px;outline:none;background:#F8FAFC}
+.mbtns{display:flex;gap:8px;padding:12px 18px;border-top:1px solid #E2E8F0}
+.cbtn{flex:1;padding:9px;background:#3B82F6;color:#fff;border:none;border-radius:7px;font-weight:600;cursor:pointer;transition:background .15s}
+.cbtn:hover{background:#2563EB}
+.xbtn{flex:1;padding:9px;background:#F1F5F9;border:1.5px solid #CBD5E1;border-radius:7px;cursor:pointer;font-weight:500}
+
+/* ── SENDING STATE ── */
+.sending{opacity:.6;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">M</div>
+  <div class="header-text">
+    <h1>MCUT SAS &mdash; Solicitudes de Importaci&oacute;n</h1>
+    <p>Busca referencias y env&iacute;a tu solicitud al equipo de importaciones</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-tab="b" onclick="showTab('b')">&#128269; Buscador</div>
+  <div class="tab" data-tab="p" onclick="showTab('p')">&#128230; Pedidos por proveedor <span class="badge" id="pedBadge" style="display:none">0</span></div>
+</div>
+
+<!-- LOADING -->
+<div id="loading">
+  <div class="spinner"></div>
+  <span>Cargando cat&aacute;logo de referencias...</span>
+</div>
+
+<!-- BUSCADOR -->
+<div id="tab-b" style="display:none">
+  <div class="sbar">
+    <input type="text" id="si" placeholder="Buscar por c&oacute;digo, descripci&oacute;n, producto... ej: TK-8118, fresa, inserto, lubricante">
+    <div id="chips"></div>
+  </div>
+  <div class="layout">
+    <div class="gwrap">
+      <div class="rc" id="rc"></div>
+      <div class="grid" id="grid"><div class="msg">Escribe algo o elige un proveedor.</div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-hdr">&#128722; Tu solicitud</div>
+      <div class="info-fields">
+        <label>Comercial *</label>
+        <input type="text" id="f-com" placeholder="Tu nombre">
+        <label>Cliente *</label>
+        <input type="text" id="f-cli" placeholder="Nombre del cliente">
+        <label>OC # (opcional)</label>
+        <input type="text" id="f-oc" placeholder="N&uacute;mero de orden de compra">
+      </div>
+      <div class="citems" id="ci">
+        <div class="cempty">Haz clic en <b>+</b> para agregar referencias.</div>
+      </div>
+      <div class="pfooter">
+        <button class="gbtn" id="gb" onclick="gen()" disabled>Enviar solicitud</button>
+        <button class="clrbtn" id="clrbtn" onclick="clearCart()" style="display:none">Limpiar selecci&oacute;n</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PEDIDOS -->
+<div id="tab-p" style="display:none">
+  <div class="ped-wrap">
+    <div class="ped-toolbar">
+      <h2>&#128230; Pedidos pendientes por proveedor</h2>
+      <button class="tbtn blue" onclick="exportAll()">&#128196; Exportar todo</button>
+      <button class="tbtn red" onclick="clearDone()">&#128465; Limpiar completados</button>
+    </div>
+    <div id="ped-list"></div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="ov" id="ov">
+  <div class="modal">
+    <div class="modal-hdr">&#128203; <span id="modal-title">Solicitud enviada</span></div>
+    <textarea id="tx" readonly></textarea>
+    <div class="mbtns">
+      <button class="cbtn" onclick="cop()">Copiar</button>
+      <button class="xbtn" onclick="document.getElementById('ov').classList.remove('open')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ──
+// Reemplaza esta URL con la de tu flujo de Power Automate
+var PA_WEBHOOK = 'POWER_AUTOMATE_WEBHOOK_URL';
+var LS_KEY = 'mcut_pedidos_v2';
+
+var P = [];
+var MARCAS = ['TODOS','KYOCERA','ANNWAY','MCUT','CARMEX','OSG','DASQUA','HAIMER','CONDAT','DOWIN LASER','PRECISE','MRCM','NSK','STANNY','EARTH CHAIN','MADAULA'];
+var BC = {KYOCERA:'bKYOCERA',ANNWAY:'bANNWAY',MCUT:'bMCUT',CARMEX:'bCARMEX',OSG:'bOSG',DASQUA:'bDASQUA',HAIMER:'bHAIMER',CONDAT:'bCONDAT'};
+var cart = {}, af = 'TODOS', st = '';
+
+// ── LOAD DATA ──
+fetch('./inventario.json')
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    P = data;
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('tab-b').style.display = 'block';
+    buildChips();
+    render();
+    updateBadge();
+  })
+  .catch(function(e){
+    document.getElementById('loading').innerHTML =
+      '<div style="color:#EF4444;text-align:center;padding:40px">Error cargando el catálogo.<br><small>Verifica que inventario.json esté en la misma carpeta.</small></div>';
+  });
+
+// ── TABS ──
+window.showTab = function(t){
+  document.getElementById('tab-b').style.display = t==='b'?'block':'none';
+  document.getElementById('tab-p').style.display = t==='p'?'block':'none';
+  var all = document.querySelectorAll('.tab');
+  for(var i=0;i<all.length;i++) all[i].classList[all[i].getAttribute('data-tab')===t?'add':'remove']('on');
+  if(t==='p') renderPed();
+};
+
+// ── CHIPS ──
+function buildChips(){
+  var ch = document.getElementById('chips');
+  ch.innerHTML = '';
+  MARCAS.forEach(function(m){
+    var cnt = m==='TODOS' ? P.length : P.filter(function(p){return p.marca===m;}).length;
+    if(m!=='TODOS' && cnt===0) return;
+    var btn = document.createElement('button');
+    btn.className = 'chip' + (m==='TODOS'?' on':'');
+    btn.textContent = m + ' (' + cnt + ')';
+    btn.setAttribute('data-m', m);
+    ch.appendChild(btn);
+  });
+  ch.addEventListener('click', function(e){
+    var btn = e.target;
+    if(!btn.getAttribute('data-m')) return;
+    af = btn.getAttribute('data-m');
+    var all = ch.querySelectorAll('.chip');
+    for(var i=0;i<all.length;i++) all[i].classList.remove('on');
+    btn.classList.add('on');
+    render();
+  });
+}
+
+document.getElementById('si').addEventListener('input', function(e){
+  st = e.target.value.toLowerCase().trim();
+  render();
+});
+
+// ── FILTER ──
+function filt(){
+  var l = P;
+  if(af !== 'TODOS') l = l.filter(function(p){return p.marca===af;});
+  if(st) l = l.filter(function(p){
+    return (p.desc+' '+p.codigo+' '+p.producto+' '+p.marca).toLowerCase().indexOf(st) !== -1;
+  });
+  return l;
+}
+
+// ── RENDER GRID ──
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function render(){
+  var l = filt();
+  document.getElementById('rc').textContent = l.length.toLocaleString() + ' referencias encontradas';
+  var g = document.getElementById('grid');
+  if(!st && af==='TODOS'){
+    g.innerHTML = '<div class="msg">Escribe al menos 2 caracteres o elige un proveedor.</div>';
+    return;
+  }
+  if(!l.length){ g.innerHTML = '<div class="msg">Sin resultados.</div>'; return; }
+  if(st.length < 2 && af==='TODOS'){
+    g.innerHTML = '<div class="msg">Escribe al menos 2 caracteres para buscar.</div>';
+    return;
+  }
+  var show = l.slice(0, 120);
+  var h = '';
+  for(var i=0;i<show.length;i++){
+    var p = show[i];
+    var k = p.codigo || p.desc;
+    var add = !!cart[k];
+    var badge = BC[p.marca] || 'bDEF';
+    h += '<div class="card'+(add?' on':'')+'" data-k="'+encodeURIComponent(k)+'">'
+      + '<span class="mbadge '+badge+'">'+esc(p.marca)+'</span>'
+      + '<button class="addbtn">'+(add?'&#10003;':'+')+'</button>'
+      + '<div class="cref">'+(p.codigo?'<b>'+esc(p.codigo)+'</b> &mdash; ':'')+esc(p.desc)+'</div>'
+      + '<div class="cprod">'+esc(p.producto)+'</div>'
+      + (p.arancel?'<div class="car">'+esc(p.arancel)+'</div>':'')
+      + '</div>';
+  }
+  if(l.length>120) h += '<div class="msg" style="color:#64748B">Mostrando 120 de '+l.length.toLocaleString()+'. Refina la búsqueda.</div>';
+  g.innerHTML = h;
+}
+
+// ── GRID CLICK (event delegation) ──
+function findCard(el, root){
+  while(el && el!==root){ if(el.getAttribute && el.getAttribute('data-k')) return el; el=el.parentNode; }
+  return null;
+}
+document.getElementById('grid').addEventListener('click', function(e){
+  var card = findCard(e.target, this);
+  if(!card) return;
+  var k = decodeURIComponent(card.getAttribute('data-k'));
+  var p = null;
+  for(var i=0;i<P.length;i++){ if((P[i].codigo||P[i].desc)===k){p=P[i];break;} }
+  if(!p) return;
+  if(cart[k]) delete cart[k];
+  else cart[k] = {k:k,desc:p.desc,producto:p.producto,marca:p.marca,arancel:p.arancel||'',qty:1,u:'UND'};
+  rCart(); render();
+});
+
+// ── CART ──
+function rCart(){
+  var el = document.getElementById('ci');
+  var ks = Object.keys(cart);
+  var has = ks.length > 0;
+  document.getElementById('gb').disabled = !has;
+  document.getElementById('clrbtn').style.display = has ? 'block' : 'none';
+  if(!has){ el.innerHTML = '<div class="cempty">Haz clic en <b>+</b> para agregar referencias.</div>'; return; }
+  var h = '';
+  for(var i=0;i<ks.length;i++){
+    var k=ks[i], it=cart[k], sk=encodeURIComponent(k);
+    h += '<div class="ci"><div class="cr">'+esc(it.desc)
+      +'<button class="rmv" data-k="'+sk+'">&times;</button></div>'
+      +'<div style="font-size:.7rem;color:#64748B">'+esc(it.marca)+'</div>'
+      +'<div class="crow">Cant:<input type="number" min="1" value="'+it.qty+'" class="qi" data-k="'+sk+'">'
+      +'<select class="ui" data-k="'+sk+'">'
+      +'<option'+(it.u==='UND'?' selected':'')+'>UND</option>'
+      +'<option'+(it.u==='CAJA'?' selected':'')+'>CAJA</option>'
+      +'<option'+(it.u==='KG'?' selected':'')+'>KG</option>'
+      +'<option'+(it.u==='LT'?' selected':'')+'>LT</option>'
+      +'<option'+(it.u==='M'?' selected':'')+'>M</option>'
+      +'</select></div></div>';
+  }
+  el.innerHTML = h;
+}
+
+document.getElementById('ci').addEventListener('click', function(e){
+  if(e.target.classList.contains('rmv')){
+    delete cart[decodeURIComponent(e.target.getAttribute('data-k'))];
+    rCart(); render();
+  }
+});
+document.getElementById('ci').addEventListener('change', function(e){
+  var k = decodeURIComponent(e.target.getAttribute('data-k')||'');
+  if(!k||!cart[k]) return;
+  if(e.target.classList.contains('qi')) cart[k].qty = parseInt(e.target.value)||1;
+  if(e.target.classList.contains('ui')) cart[k].u = e.target.value;
+});
+
+window.clearCart = function(){
+  cart = {}; rCart(); render();
+};
+
+// ── GENERATE & SEND ──
+window.gen = function(){
+  var ks = Object.keys(cart);
+  if(!ks.length) return;
+  var com = document.getElementById('f-com').value.trim();
+  var cli = document.getElementById('f-cli').value.trim();
+  var oc  = document.getElementById('f-oc').value.trim();
+  document.getElementById('f-com').classList[com?'remove':'add']('req');
+  document.getElementById('f-cli').classList[cli?'remove':'add']('req');
+  if(!com){ document.getElementById('f-com').focus(); return; }
+  if(!cli){ document.getElementById('f-cli').focus(); return; }
+
+  var items = [];
+  ks.forEach(function(k){
+    var it = cart[k];
+    items.push({k:k,desc:it.desc,producto:it.producto,marca:it.marca,arancel:it.arancel,qty:it.qty,u:it.u,done:false});
+  });
+
+  var fecha = new Date().toLocaleDateString('es-CO');
+  var solId = Date.now();
+  var payload = {id:solId,fecha:fecha,comercial:com,cliente:cli,oc:oc,items:items};
+
+  // Save locally
+  var data = loadPed();
+  data.push(payload);
+  savePed(data);
+  updateBadge();
+
+  // Send to Power Automate
+  var gbtn = document.getElementById('gb');
+  if(PA_WEBHOOK && PA_WEBHOOK !== 'POWER_AUTOMATE_WEBHOOK_URL'){
+    gbtn.textContent = 'Enviando...';
+    gbtn.classList.add('sending');
+    fetch(PA_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    }).then(function(){
+      gbtn.textContent = '&#10003; Enviado';
+      setTimeout(function(){ gbtn.textContent='Enviar solicitud'; gbtn.classList.remove('sending'); }, 2000);
+    }).catch(function(){
+      gbtn.textContent = 'Enviado (sin conexión PA)';
+      gbtn.classList.remove('sending');
+    });
+  }
+
+  // Build message text
+  var t = '📦 *SOLICITUD DE IMPORTACIÓN — MCUT SAS*\n';
+  t += 'Fecha: ' + fecha + '\n';
+  t += 'Comercial: ' + com + '\n';
+  t += 'Cliente: ' + cli + '\n';
+  if(oc) t += 'OC #: ' + oc + '\n';
+  t += '\n*Referencias:*\n';
+  items.forEach(function(it,i){
+    t += (i+1) + '. ' + it.desc;
+    if(it.producto && it.producto!==it.desc) t += ' (' + it.producto + ')';
+    t += '\n   Proveedor: ' + it.marca;
+    if(it.arancel) t += ' | Arancel: ' + it.arancel;
+    t += '\n   Cantidad: ' + it.qty + ' ' + it.u + '\n';
+  });
+  t += '\n_Solicitud registrada en el sistema._';
+
+  document.getElementById('modal-title').textContent = '✅ Solicitud enviada';
+  document.getElementById('tx').value = t;
+  document.getElementById('ov').classList.add('open');
+
+  // Clear form
+  document.getElementById('f-com').value = '';
+  document.getElementById('f-cli').value = '';
+  document.getElementById('f-oc').value = '';
+  cart = {}; rCart(); render();
+};
+
+// ── PEDIDOS (localStorage) ──
+function loadPed(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||'[]'); }catch(e){ return []; } }
+function savePed(d){ localStorage.setItem(LS_KEY, JSON.stringify(d)); }
+
+function updateBadge(){
+  var data = loadPed();
+  var n = 0;
+  data.forEach(function(sol){ sol.items.forEach(function(it){ if(!it.done) n++; }); });
+  var b = document.getElementById('pedBadge');
+  b.style.display = n > 0 ? 'inline' : 'none';
+  b.textContent = n;
+}
+
+function renderPed(){
+  var data = loadPed();
+  var el = document.getElementById('ped-list');
+  var byMarca = {};
+  data.forEach(function(sol){
+    sol.items.forEach(function(it){
+      if(!byMarca[it.marca]) byMarca[it.marca] = [];
+      var ex = null;
+      byMarca[it.marca].forEach(function(x){ if(x.k===it.k && !it.done && !x.done) ex=x; });
+      var meta = (sol.comercial||'') + (sol.cliente?' → '+sol.cliente:'') + (sol.oc?' OC:'+sol.oc:'');
+      if(ex && !it.done){
+        ex.qty += it.qty;
+        if(meta && ex.metas.indexOf(meta)<0) ex.metas.push(meta);
+      } else {
+        byMarca[it.marca].push({k:it.k,desc:it.desc,producto:it.producto,arancel:it.arancel,
+          qty:it.qty,u:it.u,done:it.done,solId:sol.id,metas:meta?[meta]:[]});
+      }
+    });
+  });
+  var marcas = Object.keys(byMarca);
+  if(!marcas.length){
+    el.innerHTML = '<div class="no-ped">No hay pedidos acumulados aún.<br><small>Los pedidos aparecen aquí cuando los comerciales envían solicitudes.</small></div>';
+    return;
+  }
+  var h = '';
+  marcas.forEach(function(m){
+    var items = byMarca[m];
+    var pend = items.filter(function(x){return!x.done;}).length;
+    var badge = BC[m]||'bDEF';
+    h += '<div class="sup-block">'
+      + '<div class="sup-hdr"><span class="mbadge '+badge+'">'+esc(m)+'</span>'
+      + '<span class="cnt">'+pend+' pendiente'+(pend!==1?'s':'')+' / '+items.length+' total</span>'
+      + '<button class="exp-btn" onclick="exportMarca(\''+esc(m)+'\')">&#128196; Exportar</button></div>';
+    items.forEach(function(it){
+      var metaStr = it.metas&&it.metas.length ? it.metas.join(' | ') : '';
+      h += '<div class="ped-item'+(it.done?' done':'')+'" data-sol="'+it.solId+'" data-k="'+encodeURIComponent(it.k)+'">'
+        + '<div><div class="iref">'+esc(it.k)+(it.k!==it.desc?' — '+esc(it.desc):'')+'</div>'
+        + (metaStr?'<div class="imeta">'+esc(metaStr)+'</div>':'')
+        + '<div class="iprod">'+esc(it.producto)+(it.arancel?' | '+esc(it.arancel):'')+'</div></div>'
+        + '<div class="iqty">'+it.qty+' '+it.u+'</div>'
+        + '<button class="done-btn'+(it.done?' undo':'')+'" data-sol="'+it.solId+'" data-k="'+encodeURIComponent(it.k)+'">'
+        + (it.done?'&#8635; Reabrir':'&#10003; Listo')+'</button>'
+        + '</div>';
+    });
+    h += '</div>';
+  });
+  el.innerHTML = h;
+}
+
+document.getElementById('ped-list').addEventListener('click', function(e){
+  var btn = e.target.closest ? e.target.closest('.done-btn') : null;
+  if(!btn) return;
+  var solId = parseInt(btn.getAttribute('data-sol'));
+  var k = decodeURIComponent(btn.getAttribute('data-k'));
+  var data = loadPed();
+  data.forEach(function(sol){
+    if(sol.id===solId) sol.items.forEach(function(it){if(it.k===k) it.done=!it.done;});
+  });
+  savePed(data); updateBadge(); renderPed();
+});
+
+window.exportMarca = function(marca){
+  var data = loadPed();
+  var merged = {};
+  data.forEach(function(sol){
+    sol.items.forEach(function(it){
+      if(it.marca===marca && !it.done){
+        if(merged[it.k]) merged[it.k].qty+=it.qty;
+        else{ var c=JSON.parse(JSON.stringify(it)); c.clientes=sol.cliente?[sol.cliente]:[];merged[it.k]=c; }
+      }
+    });
+  });
+  var keys = Object.keys(merged);
+  if(!keys.length){ alert('No hay items pendientes para '+marca); return; }
+  var t = '📋 ORDEN DE COMPRA — '+marca+'\nFecha: '+new Date().toLocaleDateString('es-CO')+'\nMCUT SAS\n\n';
+  keys.forEach(function(k,i){
+    var it=merged[k];
+    t += (i+1)+'. '+it.desc;
+    if(it.producto&&it.producto!==it.desc) t += ' ('+it.producto+')';
+    if(it.arancel) t += '\n   Arancel: '+it.arancel;
+    t += '\n   Cantidad: '+it.qty+' '+it.u;
+    if(it.clientes&&it.clientes.length) t += '\n   Clientes: '+it.clientes.join(', ');
+    t += '\n';
+  });
+  document.getElementById('modal-title').textContent = 'Orden — '+marca;
+  document.getElementById('tx').value = t;
+  document.getElementById('ov').classList.add('open');
+};
+
+window.exportAll = function(){
+  var data = loadPed();
+  var byM = {};
+  data.forEach(function(sol){
+    sol.items.forEach(function(it){
+      if(it.done) return;
+      if(!byM[it.marca]) byM[it.marca] = {};
+      if(byM[it.marca][it.k]) byM[it.marca][it.k].qty+=it.qty;
+      else byM[it.marca][it.k] = JSON.parse(JSON.stringify(it));
+    });
+  });
+  var marcas = Object.keys(byM);
+  if(!marcas.length){ alert('No hay pedidos pendientes.'); return; }
+  var t = '📦 RESUMEN PEDIDOS PENDIENTES — MCUT SAS\nFecha: '+new Date().toLocaleDateString('es-CO')+'\n';
+  marcas.forEach(function(m){
+    t += '\n════ '+m+' ════\n';
+    var items = Object.values(byM[m]);
+    items.forEach(function(it,i){
+      t += (i+1)+'. '+it.desc+'\n   Cantidad: '+it.qty+' '+it.u+'\n';
+    });
+  });
+  document.getElementById('modal-title').textContent = 'Resumen completo';
+  document.getElementById('tx').value = t;
+  document.getElementById('ov').classList.add('open');
+};
+
+window.clearDone = function(){
+  var data = loadPed();
+  data = data.map(function(sol){
+    sol.items = sol.items.filter(function(it){return!it.done;});
+    return sol;
+  }).filter(function(sol){return sol.items.length>0;});
+  savePed(data); updateBadge(); renderPed();
+};
+
+window.cop = function(){
+  var tx = document.getElementById('tx');
+  tx.select();
+  try{
+    navigator.clipboard.writeText(tx.value).then(function(){
+      var b=document.querySelector('.cbtn'); b.textContent='&#10003; Copiado!';
+      setTimeout(function(){b.textContent='Copiar';},1800);
+    });
+  }catch(e){ try{document.execCommand('copy');}catch(e2){} }
+};
+</script>
+</body>
+</html>
