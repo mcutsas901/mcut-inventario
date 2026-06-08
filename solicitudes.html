@@ -70,9 +70,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 .info-fields{padding:10px 12px;border-bottom:1px solid #E2E8F0;background:#FAFCFF}
 .info-fields label{display:block;font-size:.71rem;font-weight:600;color:#475569;margin-bottom:2px;margin-top:5px}
 .info-fields label:first-child{margin-top:0}
-.info-fields input{width:100%;padding:5px 8px;border:1.5px solid #CBD5E1;border-radius:6px;font-size:.78rem;outline:none;transition:border .15s}
-.info-fields input:focus{border-color:#3B82F6}
-.info-fields input.req{border-color:#FCA5A5;background:#FFF5F5}
+.info-fields input,.info-fields select{width:100%;padding:5px 8px;border:1.5px solid #CBD5E1;border-radius:6px;font-size:.78rem;outline:none;transition:border .15s;background:#fff}
+.info-fields input:focus,.info-fields select:focus{border-color:#3B82F6}
+.info-fields input.req,.info-fields select.req{border-color:#FCA5A5;background:#FFF5F5}
 .citems{flex:1;overflow-y:auto;padding:7px}
 .cempty{color:#94A3B8;text-align:center;padding:22px 12px;font-size:.82rem}
 .ci{border:1px solid #E2E8F0;border-radius:7px;padding:8px;margin-bottom:6px;font-size:.76rem}
@@ -125,7 +125,17 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
       <div class="panel-hdr">&#128722; Tu solicitud</div>
       <div class="info-fields">
         <label>Comercial *</label>
-        <input type="text" id="f-com" placeholder="Tu nombre">
+        <select id="f-com">
+          <option value="">-- Selecciona --</option>
+          <option>Erick Pulido</option>
+          <option>Leidy Lopez</option>
+          <option>Cristian Ruiz</option>
+          <option>Raul Chaves</option>
+          <option>Isay Quiroga Jr</option>
+          <option>Isay Quiroga Sr</option>
+          <option>Andres Garcia</option>
+          <option>Michael Betin</option>
+        </select>
         <label>Cliente *</label>
         <input type="text" id="f-cli" placeholder="Nombre del cliente">
         <label>OC # (opcional)</label>
@@ -321,6 +331,7 @@ window.gen = function(){
   });
 
   // Send to Power Automate (one row per item)
+  var solId = Date.now();
   var gbtn = document.getElementById('gb');
   gbtn.textContent = 'Enviando...';
   gbtn.classList.add('sending');
@@ -329,8 +340,9 @@ window.gen = function(){
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
+        id: String(solId),
         comercial: com, cliente: cli, oc: oc,
-        marca: item.marca, codigo: item.codigo,
+        marca: item.marca, codigo: item.k,
         descripcion: item.desc,
         producto: item.producto||'',
         arancel: item.arancel||'',
@@ -349,7 +361,7 @@ window.gen = function(){
   });
 
   // Clear form
-  document.getElementById('f-com').value = '';
+  document.getElementById('f-com').selectedIndex = 0;
   document.getElementById('f-cli').value = '';
   document.getElementById('f-oc').value = '';
   cart = {}; rCart(); render();
