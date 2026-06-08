@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MCUT SAS — Carga Automática de Orden</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;min-height:100vh}
+
+.header{background:#1E2A3A;color:#fff;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.logo{font-size:1.4rem;font-weight:900;color:#3B82F6;letter-spacing:-1px}
+.header-text h1{font-size:1rem;font-weight:700}
+.header-text p{font-size:.76rem;color:#94A3B8;margin-top:1px}
+
+.main{max-width:1200px;margin:28px auto;padding:0 20px}
+
+/* UPLOAD AREA */
+.upload-card{background:#fff;border:2.5px dashed #CBD5E1;border-radius:16px;padding:48px 32px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.upload-card:hover,.upload-card.drag{border-color:#3B82F6;background:#EFF6FF}
+.upload-card.has-file{border-color:#10B981;border-style:solid;background:#ECFDF5}
+.upload-icon{font-size:3rem;margin-bottom:12px}
+.upload-card h2{font-size:1.15rem;font-weight:700;color:#1E293B;margin-bottom:6px}
+.upload-card p{font-size:.85rem;color:#64748B}
+.btn-upload{display:inline-block;margin-top:18px;background:#3B82F6;color:#fff;padding:10px 24px;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-upload:hover{background:#2563EB}
+input[type=file]{display:none}
+
+/* STATUS */
+.status-bar{display:none;background:#fff;border-radius:12px;padding:14px 20px;margin-top:16px;border-left:4px solid #3B82F6;font-size:.88rem;color:#475569}
+.status-bar.ok{border-color:#10B981;color:#065F46}
+.status-bar.warn{border-color:#F59E0B;color:#92400E}
+.status-bar.err{border-color:#EF4444;color:#991B1B}
+
+/* COL SELECTOR */
+.col-selector{display:none;background:#fff;border-radius:12px;padding:20px 24px;margin-top:16px;border:1.5px solid #E2E8F0}
+.col-selector h3{font-size:.9rem;font-weight:700;margin-bottom:12px;color:#1E293B}
+.col-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:16px}
+.col-btn{background:#F8FAFC;border:1.5px solid #E2E8F0;border-radius:8px;padding:8px 12px;font-size:.8rem;cursor:pointer;font-weight:500;transition:all .15s;text-align:left}
+.col-btn:hover{border-color:#3B82F6;color:#1D4ED8}
+.col-btn.selected{background:#1E2A3A;color:#fff;border-color:#1E2A3A}
+.btn-proc{background:#1E2A3A;color:#fff;padding:10px 24px;border:none;border-radius:8px;font-size:.9rem;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-proc:hover{background:#0F172A}
+.btn-proc:disabled{opacity:.4;cursor:not-allowed}
+
+/* RESULTS */
+.results{display:none;margin-top:20px}
+.results-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.results-header h2{font-size:1rem;font-weight:700}
+.stats{display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:8px;padding:8px 16px;font-size:.82rem;font-weight:600;border:1.5px solid #E2E8F0}
+.stat.green{border-color:#10B981;color:#065F46;background:#ECFDF5}
+.stat.red{border-color:#EF4444;color:#991B1B;background:#FEF2F2}
+.stat.blue{border-color:#3B82F6;color:#1D4ED8;background:#EFF6FF}
+.btn-export{background:#10B981;color:#fff;border:none;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;transition:background .15s}
+.btn-export:hover{background:#059669}
+
+/* TABLE */
+.tbl-wrap{background:#fff;border-radius:12px;overflow:hidden;border:1.5px solid #E2E8F0;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead tr{background:#1E2A3A;color:#fff}
+th{padding:10px 12px;text-align:left;font-weight:600;white-space:nowrap}
+tbody tr{border-bottom:1px solid #F1F5F9}
+tbody tr:hover{background:#F8FAFC}
+tbody tr.not-found{background:#FEF9F0}
+td{padding:9px 12px;vertical-align:middle;white-space:nowrap}
+.badge-ok{display:inline-block;background:#ECFDF5;color:#065F46;border:1px solid #6EE7B7;border-radius:4px;padding:1px 7px;font-size:.73rem;font-weight:600}
+.badge-no{display:inline-block;background:#FEF2F2;color:#991B1B;border:1px solid #FCA5A5;border-radius:4px;padding:1px 7px;font-size:.73rem;font-weight:600}
+.td-code{font-weight:700;color:#1E2A3A;max-width:160px;overflow:hidden;text-overflow:ellipsis}
+.td-desc{max-width:220px;overflow:hidden;text-overflow:ellipsis;color:#475569}
+.td-arancel{font-family:monospace;font-size:.78rem;color:#1D4ED8;font-weight:600}
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;flex-direction:column;gap:16px;color:#fff}
+.loading-overlay.show{display:flex}
+.spinner{width:42px;height:42px;border:4px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">MCUT</div>
+  <div class="header-text">
+    <h1>Carga Automática de Orden</h1>
+    <p>Sube el archivo de la orden — los datos de aduana se llenan automáticamente</p>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- UPLOAD -->
+  <div class="upload-card" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">📂</div>
+    <h2>Sube el archivo de la orden</h2>
+    <p>Excel con la lista de referencias (.xlsx o .xls)<br>
+       Ej: KYOCERA Orden 165 · OSG Order · ANNWAY Order</p>
+    <div class="btn-upload">Seleccionar archivo</div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+  </div>
+
+  <div class="status-bar" id="statusBar"></div>
+
+  <!-- COL SELECTOR -->
+  <div class="col-selector" id="colSelector">
+    <h3>¿En cuál columna están los CÓDIGOS? <span id="sheetName" style="color:#64748B;font-weight:400"></span></h3>
+    <div class="col-grid" id="colGrid"></div>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button class="btn-proc" id="btnProcess" onclick="processOrder()" disabled>Cargar datos de aduana →</button>
+      <span style="font-size:.8rem;color:#64748B" id="selHint">Selecciona la columna de códigos</span>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+    <div class="results-header">
+      <h2>Resultados</h2>
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <div class="stats">
+          <div class="stat blue" id="statTotal">Total: 0</div>
+          <div class="stat green" id="statFound">Encontrados: 0</div>
+          <div class="stat red" id="statMissing">Sin datos: 0</div>
+        </div>
+        <button class="btn-export" onclick="exportExcel()">⬇ Exportar DM</button>
+      </div>
+    </div>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>CÓDIGO</th>
+            <th>DESCRIPCIÓN</th>
+            <th>PRODUCTO</th>
+            <th>ARANCEL</th>
+            <th>MARCA</th>
+            <th>MATERIAL</th>
+            <th>PAÍS</th>
+            <th>USO</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div id="loadingMsg">Cargando catálogo...</div>
+</div>
+
+<script>
+let catalog = null;
+let catalogByCode = {};
+let workbookData = null;
+let selectedCol = null;
+let parsedRows = [];
+let resultRows = [];
+
+// ── Drag & drop ──
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFile(e.dataTransfer.files[0]); });
+document.getElementById('fileInput').addEventListener('change', e => handleFile(e.target.files[0]));
+
+// ── Load catalog ──
+async function loadCatalog() {
+  if (catalog) return;
+  showLoading('Cargando catálogo de referencias...');
+  try {
+    const r = await fetch('catalogo_importaciones.json');
+    if (!r.ok) throw new Error('No se encontró catalogo_importaciones.json');
+    catalog = await r.json();
+    // Índice por codigo upper
+    catalogByCode = {};
+    catalog.forEach(item => {
+      const c = (item.codigo || '').trim().toUpperCase();
+      if (c && !catalogByCode[c]) catalogByCode[c] = item;
+    });
+    hideLoading();
+  } catch(e) {
+    hideLoading();
+    showStatus('No se pudo cargar el catálogo: ' + e.message + '<br><small>Asegúrate que catalogo_importaciones.json esté en la misma carpeta.</small>', 'err');
+    throw e;
+  }
+}
+
+// ── Handle file ──
+async function handleFile(file) {
+  if (!file) return;
+  try {
+    await loadCatalog();
+  } catch(e) { return; }
+
+  showLoading('Leyendo archivo...');
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array', cellText: true, cellDates: true });
+    const sheetName = wb.SheetNames[0];
+    const ws = wb.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+    workbookData = { data, sheetName, fileName: file.name };
+    hideLoading();
+
+    // Mostrar selector de columnas
+    showColSelector(data, sheetName);
+    dz.classList.add('has-file');
+    showStatus(`✅ Archivo cargado: <strong>${file.name}</strong> — ${data.length} filas, hoja: ${sheetName}`, 'ok');
+  } catch(e) {
+    hideLoading();
+    showStatus('Error leyendo el archivo: ' + e.message, 'err');
+  }
+}
+
+// ── Col selector ──
+function showColSelector(data, sheetName) {
+  if (!data || data.length === 0) return;
+  // Buscar la fila de encabezados (primera con contenido)
+  const headerRow = data.find(r => r.some(c => c !== '')) || data[0];
+  const cols = headerRow.map((c, i) => ({ idx: i, name: String(c || `Col ${i+1}`) }));
+
+  document.getElementById('sheetName').textContent = `(${sheetName})`;
+  const grid = document.getElementById('colGrid');
+  grid.innerHTML = '';
+  selectedCol = null;
+  document.getElementById('btnProcess').disabled = true;
+  document.getElementById('selHint').textContent = 'Selecciona la columna de códigos';
+
+  cols.forEach(col => {
+    if (!col.name.trim()) return;
+    const btn = document.createElement('button');
+    btn.className = 'col-btn';
+    btn.textContent = col.name;
+    // Auto-seleccionar si parece columna de código
+    const nameLower = col.name.toLowerCase();
+    const isCode = /cod|refer|item|part|sku|ref|modelo|model/.test(nameLower);
+    if (isCode && selectedCol === null) {
+      btn.classList.add('selected');
+      selectedCol = col.idx;
+      document.getElementById('btnProcess').disabled = false;
+      document.getElementById('selHint').textContent = `Columna seleccionada: "${col.name}"`;
+    }
+    btn.onclick = () => {
+      document.querySelectorAll('.col-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedCol = col.idx;
+      document.getElementById('btnProcess').disabled = false;
+      document.getElementById('selHint').textContent = `Columna seleccionada: "${col.name}"`;
+    };
+    grid.appendChild(btn);
+  });
+
+  document.getElementById('colSelector').style.display = 'block';
+}
+
+// ── Process ──
+function processOrder() {
+  if (selectedCol === null || !workbookData) return;
+  const { data } = workbookData;
+
+  showLoading('Buscando referencias en catálogo...');
+  setTimeout(() => {
+    // Encontrar fila de headers (la que tiene el texto seleccionado)
+    let headerRowIdx = 0;
+    for (let i = 0; i < Math.min(10, data.length); i++) {
+      if (data[i][selectedCol] !== '') { headerRowIdx = i; break; }
+    }
+
+    // Extraer filas de datos (después del header)
+    const dataRows = data.slice(headerRowIdx + 1).filter(r => r[selectedCol] !== '' && r[selectedCol] != null);
+
+    resultRows = dataRows.map((r, idx) => {
+      const code = String(r[selectedCol] || '').trim();
+      const found = catalogByCode[code.toUpperCase()];
+      return {
+        num: idx + 1,
+        codigo: code,
+        found: !!found,
+        desc: found ? (found.desc || '') : '',
+        producto: found ? (found.producto || '') : '',
+        arancel: found ? (found.arancel || '') : '',
+        marca: found ? (found.marca || '') : '',
+        material: found ? (found.material || '') : '',
+        pais: found ? (found.pais || '') : '',
+        uso: found ? (found.uso || '') : '',
+        empaque: found ? (found.empaque || '') : '',
+      };
+    });
+
+    hideLoading();
+    renderResults(resultRows);
+  }, 50);
+}
+
+// ── Render ──
+function renderResults(rows) {
+  const total = rows.length;
+  const found = rows.filter(r => r.found).length;
+  const missing = total - found;
+
+  document.getElementById('statTotal').textContent = `Total: ${total}`;
+  document.getElementById('statFound').textContent = `Encontrados: ${found}`;
+  document.getElementById('statMissing').textContent = `Sin datos: ${missing}`;
+
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    if (!r.found) tr.classList.add('not-found');
+    tr.innerHTML = `
+      <td>${r.num}</td>
+      <td class="td-code" title="${r.codigo}">${r.codigo}</td>
+      <td class="td-desc" title="${r.desc}">${r.desc || '<em style="color:#94A3B8">—</em>'}</td>
+      <td>${r.producto || '<em style="color:#94A3B8">—</em>'}</td>
+      <td class="td-arancel">${r.arancel || '<em style="color:#94A3B8">—</em>'}</td>
+      <td>${r.marca || '<em style="color:#94A3B8">—</em>'}</td>
+      <td>${r.material || '<em style="color:#94A3B8">—</em>'}</td>
+      <td>${r.pais || '<em style="color:#94A3B8">—</em>'}</td>
+      <td class="td-desc" title="${r.uso}">${r.uso || '<em style="color:#94A3B8">—</em>'}</td>
+      <td>${r.found ? '<span class="badge-ok">✓ OK</span>' : '<span class="badge-no">No encontrado</span>'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Export ──
+function exportExcel() {
+  if (!resultRows.length) return;
+  const wsData = [
+    ['#', 'CODIGO', 'DESCRIPCION', 'PRODUCTO', 'TIPO EMPAQUE', 'USO', 'CODIGO ARANCEL', 'MARCA', 'MATERIAL', 'PAIS DE ORIGEN', 'ENCONTRADO']
+  ];
+  resultRows.forEach(r => {
+    wsData.push([
+      r.num, r.codigo, r.desc, r.producto, r.empaque, r.uso,
+      r.arancel, r.marca, r.material, r.pais,
+      r.found ? 'SÍ' : 'NO'
+    ]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Anchos de columna
+  ws['!cols'] = [
+    {wch:4},{wch:28},{wch:45},{wch:28},{wch:18},{wch:40},
+    {wch:18},{wch:14},{wch:12},{wch:16},{wch:12}
+  ];
+
+  // Estilo header (fila 1)
+  const range = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[addr]) continue;
+    ws[addr].s = {
+      fill: { patternType: 'solid', fgColor: { rgb: '1E2A3A' } },
+      font: { color: { rgb: 'FFFFFF' }, bold: true, sz: 10 },
+      alignment: { horizontal: 'center', vertical: 'center' }
+    };
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'DM Referencias');
+
+  const fname = workbookData ? workbookData.fileName.replace(/\.[^.]+$/, '') : 'orden';
+  XLSX.writeFile(wb, `DM_${fname}_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ── Helpers ──
+function showStatus(msg, type) {
+  const el = document.getElementById('statusBar');
+  el.innerHTML = msg;
+  el.className = 'status-bar ' + type;
+  el.style.display = 'block';
+}
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg || 'Procesando...';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.remove('show');
+}
+</script>
+</body>
+</html>
