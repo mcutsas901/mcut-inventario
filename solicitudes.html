@@ -134,7 +134,6 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
     <h1>MCUT SAS &mdash; Solicitudes de Importaci&oacute;n</h1>
     <p>Busca referencias y env&iacute;a tu solicitud al equipo de importaciones</p>
   </div>
-  <div style="margin-left:auto" id="auth-status"></div>
 </div>
 
 <div class="tabs">
@@ -206,68 +205,8 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 
 <script>
 // ── CONFIG ──
-// Reemplaza esta URL con la de tu flujo de Power Automate
-var PA_WEBHOOK = 'https://default96a513cceb3c4b4da2dd91a440dcaa.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/20af5b4ea7be4d598e75a45d609a5e90/triggers/manual/paths/invoke?api-version=1';
+var PA_WEBHOOK = 'https://default96a513cceb3c4b4da2dd91a440dcaa.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/20af5b4ea7be4d598e75a45d609a5e90/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=kvkYscatHHMyUshRK8FwVcOHif99lW1TK16km0v7tHU';
 var LS_KEY = 'mcut_pedidos_v2';
-
-// ── MSAL AUTH (carga dinámica para no bloquear la página) ──
-var msalInstance = null;
-var PA_SCOPE = ['https://service.flow.microsoft.com/.default'];
-
-function initMSAL() {
-  try {
-  msalInstance = new msal.PublicClientApplication({
-    auth: {
-      clientId: '07b9ee30-e5da-456a-b6f7-e6f8e4cb64bd',
-      authority: 'https://login.microsoftonline.com/96a513cc-eb3c-4b4d-a2dd-91a440dcaa04',
-      redirectUri: 'https://mcutsas901.github.io/mcut-inventario/solicitudes.html'
-    },
-    cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: true }
-  });
-  msalInstance.handleRedirectPromise().then(function(resp){
-    if(resp) msalInstance.setActiveAccount(resp.account);
-    updateAuthUI();
-  }).catch(function(){ updateAuthUI(); });
-  } catch(e) {
-    console.warn('MSAL init error:', e);
-    updateAuthUI();
-  }
-}
-
-// Cargar MSAL dinámicamente (no bloquea la página)
-(function(){
-  var s = document.createElement('script');
-  s.src = 'https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js';
-  s.onload = function(){ initMSAL(); };
-  s.onerror = function(){ updateAuthUI(); };
-  document.head.appendChild(s);
-})();
-
-function getAccount(){ if(!msalInstance) return null; var a=msalInstance.getAllAccounts(); return a.length>0?a[0]:null; }
-
-function updateAuthUI(){
-  var acc = getAccount();
-  var el = document.getElementById('auth-status');
-  if(!el) return;
-  if(!msalInstance){
-    el.innerHTML = '<span style="font-size:.72rem;color:#F87171">Auth no disponible</span>';
-  } else if(acc){
-    el.innerHTML = '<span style="font-size:.75rem;color:#6EE7B7">● '+acc.username+'</span>';
-  } else {
-    el.innerHTML = '<button onclick="loginMSAL()" style="background:#3B82F6;color:#fff;border:none;padding:6px 16px;border-radius:6px;font-size:.82rem;cursor:pointer;font-weight:700">Iniciar sesi&oacute;n</button>';
-  }
-}
-
-function loginMSAL(){ if(msalInstance) msalInstance.loginRedirect({scopes:PA_SCOPE}); }
-
-function getToken(){
-  if(!msalInstance) return Promise.resolve(null);
-  var acc = getAccount();
-  if(!acc){ loginMSAL(); return Promise.resolve(null); }
-  return msalInstance.acquireTokenSilent({scopes:PA_SCOPE,account:acc})
-    .then(function(r){ return r.accessToken; })
-    .catch(function(){ return msalInstance.acquireTokenPopup({scopes:PA_SCOPE}).then(function(r){ return r.accessToken; }); });
-}
 
 var P = [];
 var MARCAS = ['TODOS','KYOCERA','ANNWAY','MCUT','CARMEX','OSG','DASQUA','HAIMER','CONDAT','DOWIN LASER','PRECISE','MRCM','NSK','STANNY','EARTH CHAIN','MADAULA'];
@@ -465,25 +404,22 @@ window.gen = function(){
   var gbtn = document.getElementById('gb');
   gbtn.textContent = 'Enviando...';
   gbtn.classList.add('sending');
-  getToken().then(function(token){
-    if(!token){ gbtn.textContent='Enviar solicitud'; gbtn.classList.remove('sending'); return; }
-    var promises = items.map(function(item){
-      return fetch(PA_WEBHOOK, {
-        method: 'POST',
-        headers: {'Content-Type':'application/json','Authorization':'Bearer '+token},
-        body: JSON.stringify({
-          comercial: com, cliente: cli, oc: oc,
-          marca: item.marca, codigo: item.codigo,
-          descripcion: item.desc,
-          producto: item.producto||'',
-          arancel: item.arancel||'',
-          cantidad: item.qty,
-          unidad: item.u||'UND'
-        })
-      });
+  var promises = items.map(function(item){
+    return fetch(PA_WEBHOOK, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        comercial: com, cliente: cli, oc: oc,
+        marca: item.marca, codigo: item.codigo,
+        descripcion: item.desc,
+        producto: item.producto||'',
+        arancel: item.arancel||'',
+        cantidad: item.qty,
+        unidad: item.u||'UND'
+      })
     });
-    return Promise.all(promises);
-  }).then(function(){
+  });
+  Promise.all(promises).then(function(){
     gbtn.textContent = '&#10003; Enviado';
     setTimeout(function(){ gbtn.textContent='Enviar solicitud'; gbtn.classList.remove('sending'); }, 2000);
   }).catch(function(e){
