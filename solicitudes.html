@@ -146,6 +146,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
       </div>
       <div class="pfooter">
         <button class="gbtn" id="gb" onclick="gen()" disabled>Enviar solicitud</button>
+        <div id="sol-confirm" style="display:none;margin-top:8px;padding:8px 10px;background:#DCFCE7;border:1px solid #86EFAC;border-radius:7px;font-size:.75rem;color:#166534;font-weight:600;line-height:1.4"></div>
         <button class="clrbtn" id="clrbtn" onclick="clearCart()" style="display:none">Limpiar selecci&oacute;n</button>
       </div>
     </div>
@@ -354,7 +355,14 @@ window.gen = function(){
   });
   Promise.all(promises).then(function(){
     gbtn.textContent = '&#10003; Enviado';
-    setTimeout(function(){ gbtn.textContent='Enviar solicitud'; gbtn.classList.remove('sending'); }, 2000);
+    gbtn.classList.remove('sending');
+    var msg = document.getElementById('sol-confirm');
+    msg.textContent = '✅ Solicitud #' + solId + ' registrada. Guarda este número para seguimiento.';
+    msg.style.display = 'block';
+    setTimeout(function(){
+      gbtn.textContent = 'Enviar solicitud';
+      msg.style.display = 'none';
+    }, 8000);
   }).catch(function(e){
     console.error(e);
     gbtn.textContent = 'Error al enviar';
