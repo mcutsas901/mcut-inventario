@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MCUT SAS — Solicitudes de Importación</title>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 <style>
 /* ── RESET & BASE ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -207,11 +206,12 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 var PA_WEBHOOK = 'https://default96a513cceb3c4b4da2dd91a440dcaa.04.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/20af5b4ea7be4d598e75a45d609a5e90/triggers/manual/paths/invoke?api-version=1';
 var LS_KEY = 'mcut_pedidos_v2';
 
-// ── MSAL AUTH ──
+// ── MSAL AUTH (carga dinámica para no bloquear la página) ──
 var msalInstance = null;
 var PA_SCOPE = ['https://service.flow.microsoft.com/.default'];
 
-try {
+function initMSAL() {
+  try {
   msalInstance = new msal.PublicClientApplication({
     auth: {
       clientId: '07b9ee30-e5da-456a-b6f7-e6f8e4cb64bd',
@@ -224,10 +224,20 @@ try {
     if(resp) msalInstance.setActiveAccount(resp.account);
     updateAuthUI();
   }).catch(function(){ updateAuthUI(); });
-} catch(e) {
-  console.warn('MSAL no disponible:', e);
-  updateAuthUI();
+  } catch(e) {
+    console.warn('MSAL init error:', e);
+    updateAuthUI();
+  }
 }
+
+// Cargar MSAL dinámicamente (no bloquea la página)
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js';
+  s.onload = function(){ initMSAL(); };
+  s.onerror = function(){ updateAuthUI(); };
+  document.head.appendChild(s);
+})();
 
 function getAccount(){ if(!msalInstance) return null; var a=msalInstance.getAllAccounts(); return a.length>0?a[0]:null; }
 
