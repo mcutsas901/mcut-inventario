@@ -376,11 +376,14 @@ window.addEventListener('beforeinstallprompt', e => {
   bar.style.display = 'flex';
 });
 document.getElementById('install-btn').addEventListener('click', async () => {
-  if (!deferredPrompt) return;
-  deferredPrompt.prompt();
-  const { outcome } = await deferredPrompt.userChoice;
-  deferredPrompt = null;
-  if (outcome === 'accepted') document.getElementById('install-bar').style.display = 'none';
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === 'accepted') document.getElementById('install-bar').style.display = 'none';
+  } else {
+    alert('Para instalar:\n\n1. Toca los 3 puntos (⋮) arriba a la derecha en Chrome\n2. Selecciona "Instalar app" o "Añadir a pantalla de inicio"\n3. Confirma');
+  }
 });
 window.addEventListener('appinstalled', () => {
   document.getElementById('install-bar').style.display = 'none';
