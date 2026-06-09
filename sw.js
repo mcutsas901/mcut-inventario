@@ -1,8 +1,8 @@
-const CACHE = 'mcut-solicitudes-v1';
+const CACHE = 'mcut-inventario-v2';
 
 const CORE_ASSETS = [
   './index.html',
-  './manifest.json',
+  './manifest-inventario.json',
   './icon-192.png',
   './icon-512.png'
 ];
