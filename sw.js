@@ -1,16 +1,24 @@
-const CACHE = 'mcut-import-v1';
-const ASSETS = [
+const CACHE = 'mcut-v2';
+
+// Solo archivos pequeños en la instalación inicial
+const CORE_ASSETS = [
+  './index.html',
   './solicitudes.html',
-  './catalogo_importaciones.json',
   './manifest.json',
+  './manifest-inventario.json',
   './icon-192.png',
   './icon-512.png'
 ];
 
-// Instalar — guardar archivos en caché
+// Instalar — solo cachea archivos pequeños
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(cache => cache.addAll(ASSETS))
+    caches.open(CACHE).then(cache => {
+      // addAll falla si alguno falla — usamos add individual
+      return Promise.allSettled(
+        CORE_ASSETS.map(url => cache.add(url).catch(() => {}))
+      );
+    })
   );
   self.skipWaiting();
 });
@@ -30,9 +38,10 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     fetch(e.request)
       .then(res => {
-        // Actualizar caché con la respuesta fresca
-        const clone = res.clone();
-        caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE).then(cache => cache.put(e.request, clone));
+        }
         return res;
       })
       .catch(() => caches.match(e.request))
