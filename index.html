@@ -6,6 +6,11 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>MCUT — Inventario</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0d0f12">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="MCUT Inventario">
+<link rel="apple-touch-icon" href="./icon-192.png">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&display=swap');
 :root {
@@ -18,7 +23,6 @@
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(0,212,170,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,212,170,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
 .wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:28px 16px 80px;}
-
 /* Header */
 .hdr{margin-bottom:20px;}
 .hdr-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
@@ -29,7 +33,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .stat{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center;}
 .stat .v{font-family:var(--mono);font-size:16px;color:var(--accent);display:block;font-weight:500;}
 .stat .l{font-size:9px;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;}
-
 /* Status */
 .status{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;font-family:var(--mono);font-size:11px;color:var(--text3);transition:all .3s;}
 .status.live{border-color:rgba(0,212,170,.3);}
@@ -39,7 +42,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sdot.warn{background:var(--warn);animation:pulse 1s infinite;}
 .sdot.err{background:var(--danger);}
 @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-
 /* Search */
 .sw{position:relative;margin-bottom:10px;}
 .si-icon{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:20px;pointer-events:none;}
@@ -48,7 +50,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 #si:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,170,.1);}
 #si:disabled{opacity:.4;}
 .hint{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:16px;padding-left:4px;}
-
 /* Suggestions */
 #sugg{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--surface);border:1.5px solid var(--accent);border-radius:var(--r);max-height:260px;overflow-y:auto;z-index:200;box-shadow:0 16px 48px rgba(0,0,0,.6);display:none;-webkit-overflow-scrolling:touch;}
 #sugg::-webkit-scrollbar{width:3px;}
@@ -62,12 +63,10 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .ss{font-family:var(--mono);font-size:11px;padding:2px 7px;border-radius:4px;white-space:nowrap;}
 .ss.y{background:rgba(0,212,170,.15);color:var(--accent);}
 .ss.n{background:rgba(239,68,68,.1);color:var(--danger);}
-
 /* Result */
 #res{display:none;}
 .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-bottom:16px;animation:slideUp .25s ease;}
 @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-
 /* Card header */
 .ch{background:linear-gradient(135deg,rgba(0,212,170,.08),rgba(0,102,255,.05));border-bottom:1px solid var(--border);padding:20px;}
 .ch-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
@@ -80,7 +79,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .pv{font-family:var(--mono);font-size:22px;font-weight:500;}
 .pv.sp{font-size:13px;color:var(--text3);}
 .ps{font-size:10px;color:var(--text3);margin-top:2px;}
-
 /* Stock grid */
 .sg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
 .sg2{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border-top:2px solid var(--accent2);}
@@ -103,7 +101,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .su{font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:3px;}
 .pn{font-size:9px;color:var(--warn);margin-top:3px;font-family:var(--mono);}
 .section-label{font-family:var(--mono);font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.12em;padding:6px 16px;background:var(--surface2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
-
 /* Footer */
 .cf{border-top:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
 .ba{display:flex;align-items:center;gap:8px;}
@@ -113,7 +110,6 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .ab{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12px;font-weight:500;padding:6px 12px;border-radius:7px;}
 .ab.av{background:rgba(0,212,170,.12);color:var(--accent);border:1px solid rgba(0,212,170,.3);}
 .ab.un{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.2);}
-
 /* Empty / initial */
 #empty{text-align:center;padding:60px 20px;display:none;}
 #init{text-align:center;padding:48px 20px;}
@@ -137,32 +133,24 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
       </div>
     </div>
   </div>
-
   <div class="status" id="sb">
     <span class="sdot warn" id="sdot"></span>
     <span id="stxt">Cargando datos...</span>
   </div>
-
   <div class="sw">
     <span class="si-icon">⌕</span>
     <input type="search" id="si" placeholder="Referencia, descripción o marca..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" disabled />
     <div id="sugg"></div>
   </div>
   <div class="hint">Escribe mínimo 2 caracteres · ↑↓ navegar · Enter seleccionar · Esc limpiar</div>
-
   <div id="res"></div>
   <div id="empty"><div class="bi">◌</div><div class="bt">No encontrado: <strong id="nfr"></strong></div></div>
   <div id="init"><div class="bi">◎</div><div class="bt"><strong>Consulta de disponibilidad</strong><br>Datos actualizados periódicamente desde el sistema<br>Escribe para buscar una referencia</div></div>
 </div>
-
 <script>
-// ── Fuente de datos: inventario.json en el mismo servidor (GitHub Pages) ──────
 const JSON_URL = "inventario.json";
-
 let DATA = [];
 let selIdx = -1;
-
-// ── Helpers ──────────────────────────────────────────────────────────────────
 const $ = id => document.getElementById(id);
 const fmt = n => n > 0 ? new Intl.NumberFormat('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0}).format(n) : null;
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -171,21 +159,14 @@ function hi(text, q) {
   const re = new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
   return esc(text).replace(re,'<em>$1</em>');
 }
-
-// ── Status bar ────────────────────────────────────────────────────────────────
 function setStatus(type, msg) {
   const sb = $('sb'), dot = $('sdot'), txt = $('stxt');
   sb.className = 'status ' + (type === 'live' ? 'live' : type === 'err' ? 'err' : '');
   dot.className = 'sdot ' + (type === 'live' ? 'pulse' : type === 'err' ? 'err' : 'warn');
   txt.textContent = msg;
 }
-
-// ── Cargar datos ──────────────────────────────────────────────────────────────
-// Normaliza un registro del JSON (soporta nombres del flujo Power Automate con espacios/tildes)
 function normalizar(d) {
-  // Si ya tiene el campo "ref" es formato corto — devolver tal cual
   if (d.ref !== undefined) return d;
-  // Formato del JSON generado por Power Automate desde Excel Online
   const prs = s => { const n = parseFloat(String(s||'').replace(',','.')); return isNaN(n)?0:n; };
   return {
     ref:      d['Referencia']                          || '',
@@ -202,17 +183,14 @@ function normalizar(d) {
     barcode:  '',
   };
 }
-
 async function loadData() {
   setStatus('load', 'Cargando inventario...');
   try {
-    // Cache-bust para que siempre traiga la versión más reciente
     const r = await fetch(JSON_URL + '?v=' + Date.now());
     if (!r.ok) throw new Error('HTTP ' + r.status);
     const json = await r.json();
     const raw = Array.isArray(json) ? json : (json.items || json.data || []);
     if (!raw.length) throw new Error('JSON vacío');
-    // Normalizar y filtrar filas sin referencia (ej: fila de totales)
     DATA = raw.map(normalizar).filter(d => d.ref && d.ref.trim() !== '');
     initUI();
   } catch(e) {
@@ -220,29 +198,20 @@ async function loadData() {
     $('si').disabled = true;
   }
 }
-
-// ── Inicializar UI tras cargar datos ──────────────────────────────────────────
 function initUI() {
   const total = DATA.length;
   const conStock = DATA.filter(d => (d.total || 0) > 0).length;
-
-  // Fecha de actualización: tomada del primer registro si existe, o "hoy"
   const fechaStr = DATA[0] && DATA[0].fecha
     ? DATA[0].fecha
     : new Date().toLocaleDateString('es-CO', {day:'2-digit', month:'short', year:'numeric'});
-
   $('tRef').textContent = total.toLocaleString('es-CO');
   $('tStk').textContent = conStock.toLocaleString('es-CO');
   $('tUpd').textContent = fechaStr;
-
   setStatus('live', 'Datos cargados · ' + total.toLocaleString('es-CO') + ' referencias');
-
   const si = $('si');
   si.disabled = false;
   si.focus();
 }
-
-// ── Búsqueda / autocomplete ───────────────────────────────────────────────────
 function search(q) {
   if (!q || q.length < 2) return [];
   const lq = q.toLowerCase();
@@ -252,7 +221,6 @@ function search(q) {
     (d.marca||'').toLowerCase().includes(lq)
   ).slice(0, 12);
 }
-
 function renderSugg(q) {
   const sugg = $('sugg');
   const res = search(q);
@@ -270,13 +238,11 @@ function renderSugg(q) {
     el.addEventListener('mousedown', e => { e.preventDefault(); selectItem(sugg._res[+el.dataset.i]); });
   });
 }
-
 function selectItem(d) {
   $('sugg').style.display='none';
   $('si').value = d.ref;
   renderCard(d);
 }
-
 function renderCard(d) {
   const res = $('res');
   const precio = fmt(d.precio);
@@ -287,14 +253,11 @@ function renderCard(d) {
   const comp = d.comp || 0;
   const disp = d.disp !== undefined ? d.disp : total;
   const porsubir = d.porsubir || 0;
-
   const warnCell = (v) => v > 0 && v < 5 ? 'warn-cell' : '';
   const dangerCell = (v) => v === 0 ? 'danger-cell' : '';
-
   res.style.display = 'block';
   $('empty').style.display = 'none';
   $('init').style.display = 'none';
-
   res.innerHTML = `
   <div class="card">
     <div class="ch">
@@ -312,7 +275,6 @@ function renderCard(d) {
         </div>
       </div>
     </div>
-
     <div class="section-label">Stock por bodega</div>
     <div class="sg">
       <div class="sc ${dangerCell(bog)} ${warnCell(bog)}">
@@ -331,7 +293,6 @@ function renderCard(d) {
         <div class="su">unidades</div>
       </div>
     </div>
-
     <div class="section-label">Totales calculados</div>
     <div class="sg2">
       <div class="sc highlight">
@@ -351,7 +312,6 @@ function renderCard(d) {
         <div class="su">para venta</div>
       </div>
     </div>
-
     <div class="cf">
       <div class="ba">
         <span class="bl">Cód. barras</span>
@@ -366,22 +326,15 @@ function renderCard(d) {
     </div>
   </div>`;
 }
-
-// ── Eventos ───────────────────────────────────────────────────────────────────
 $('si').addEventListener('input', e => {
   const q = e.target.value.trim();
-  if (q.length < 2) {
-    $('sugg').style.display = 'none';
-    return;
-  }
+  if (q.length < 2) { $('sugg').style.display = 'none'; return; }
   renderSugg(q);
 });
-
 $('si').addEventListener('keydown', e => {
   const sugg = $('sugg');
   const items = sugg.querySelectorAll('.sitem');
   if (!items.length) return;
-
   if (e.key === 'ArrowDown') {
     e.preventDefault();
     selIdx = Math.min(selIdx + 1, items.length - 1);
@@ -401,17 +354,23 @@ $('si').addEventListener('keydown', e => {
     $('init').style.display = 'block';
     return;
   } else return;
-
   items.forEach((el, i) => el.classList.toggle('act', i === selIdx));
   if (selIdx >= 0) items[selIdx].scrollIntoView({block:'nearest'});
 });
-
 document.addEventListener('click', e => {
   if (!e.target.closest('.sw')) $('sugg').style.display = 'none';
 });
-
-// ── Arrancar ──────────────────────────────────────────────────────────────────
 loadData();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('SW registrado'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
 </script>
 </body>
 </html>
