@@ -101,6 +101,10 @@ body{font-family:'Segoe UI',Arial,sans-serif;background:#F1F5F9;color:#1E293B;mi
 </head>
 <body>
 
+<div id="install-bar" style="display:none;background:#1E2A3A;border:1.5px solid #3B82F6;color:#fff;padding:10px 16px;align-items:center;justify-content:space-between;gap:12px;font-size:13px;">
+  <span>📲 Instala la app para usarla sin internet</span>
+  <button id="install-btn" style="background:#3B82F6;color:#fff;border:none;border-radius:7px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;">Instalar</button>
+</div>
 <div class="header">
   <div class="logo">M</div>
   <div class="header-text">
@@ -387,6 +391,23 @@ window.gen = function(){
 
 <script>
 // ── PWA: registrar service worker ──
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const bar = document.getElementById('install-bar');
+  bar.style.display = 'flex';
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  if (outcome === 'accepted') document.getElementById('install-bar').style.display = 'none';
+});
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-bar').style.display = 'none';
+});
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
