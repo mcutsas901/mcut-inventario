@@ -1,4 +1,4 @@
-const CACHE = 'mcut-inventario-v2';
+const CACHE = 'mcut-inventario-v3';
 
 const CORE_ASSETS = [
   './index.html',
@@ -26,6 +26,12 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // inventario.json siempre va directo a la red, nunca desde caché
+  if (e.request.url.includes('inventario.json')) {
+    e.respondWith(fetch(e.request, {cache: 'no-store'}));
+    return;
+  }
+
   e.respondWith(
     fetch(e.request)
       .then(res => {
